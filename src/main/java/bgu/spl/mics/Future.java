@@ -18,7 +18,7 @@ public class Future<T> {
 	 * This should be the the only public constructor in this class.
 	 */
 	public Future() {
-		
+
 	}
 	
 	/**
@@ -30,22 +30,33 @@ public class Future<T> {
      * 	       
      */
 	public T get() {
-		
-        return null; 
+		try {
+			synchronized (this) {	//todo: check why we need to use "synchronized"
+				while (!this.isDone) {
+					wait();
+				}
+			}
+		} catch (InterruptedException ignored){}
+
+        return this.result;
 	}
 	
 	/**
      * Resolves the result of this Future object.
      */
 	public void resolve (T result) {
-		
+		this.result = result;
+		this.isDone = true;
+		synchronized (this){	//todo: check why we need to use "synchronized"
+			notifyAll();
+		}
 	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise
      */
 	public boolean isDone() {
-		return null;
+		return this.isDone;
 	}
 	
 	/**
@@ -60,8 +71,19 @@ public class Future<T> {
      *         elapsed, return null.
      */
 	public T get(long timeout, TimeUnit unit) {
-		
-        return null;
-	}
+		try {
+			synchronized (this) {	//todo: check why we need to use "synchronized"
+				if (!this.isDone) {
+					wait(unit.toMillis(timeout));
+				}
+				if (this.isDone){
+					return this.result;
+				} else {
+					return null;
+				}
+			}
+		} catch (InterruptedException ignored){}
 
+		return this.result;
+	}
 }

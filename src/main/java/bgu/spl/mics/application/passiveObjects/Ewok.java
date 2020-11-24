@@ -9,19 +9,43 @@ package bgu.spl.mics.application.passiveObjects;
 public class Ewok {
 	int serialNumber;
 	boolean available;
-	
+
+	public Ewok(int serialNumber) {
+	    this.serialNumber = serialNumber;
+	    available = true;
+    }
   
     /**
      * Acquires an Ewok
+     * @PRE: available == true
+     * @POST: available == false
      */
     public void acquire() {
-		
+		if (isAvailable()){
+		    changeAvailable();
+        }
     }
 
     /**
      * release an Ewok
+     * @PRE: available == false
+     * @POST: available == true
      */
     public void release() {
-    	
+    	if (!isAvailable()){
+    	    changeAvailable();
+        }
+    }
+
+
+    public boolean isAvailable() {  //todo: maybe make this private
+        return this.available;
+    }
+
+    /**
+     * @POST: available != @PRE(available)
+     */
+    public void changeAvailable() { //todo: maybe make this private
+        this.available = !this.available;
     }
 }
