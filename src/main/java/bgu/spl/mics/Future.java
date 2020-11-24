@@ -30,14 +30,30 @@ public class Future<T> {
      * 	       
      */
 	public T get() {
+		try{
+			synchronized (this){ // TODO check synchro why ?
+				while (!this.isDone){
+					wait();
+				}
+
+			}
+		}
+		catch (InterruptedException ignored){
+
+		}
 		
-        return null; 
+        return this.result;
 	}
 	
 	/**
      * Resolves the result of this Future object.
      */
 	public void resolve (T result) {
+		this.result = result;
+		this.isDone = true;
+		synchronized (this){ //TODO check why we need synchronized?
+			notifyAll();
+		}
 		
 	}
 	
@@ -45,7 +61,7 @@ public class Future<T> {
      * @return true if this object has been resolved, false otherwise
      */
 	public boolean isDone() {
-		return null;
+		return this.isDone;
 	}
 	
 	/**
@@ -60,8 +76,21 @@ public class Future<T> {
      *         elapsed, return null.
      */
 	public T get(long timeout, TimeUnit unit) {
-		
-        return null;
+		try{
+			synchronized (this){ // TODO check synchro why ?
+				if(!this.isDone){
+					wait(unit.toMillis(timeout));
+				}
+				if (this.isDone) return this.result;
+				else return null;
+
+			}
+		}
+		catch (InterruptedException ignored){
+
+		}
+		return this.result;
+
 	}
 
 }

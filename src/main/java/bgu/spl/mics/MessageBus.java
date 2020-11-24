@@ -13,6 +13,14 @@ public interface MessageBus {
 
     /**
      * Subscribes {@code m} to receive {@link Event}s of type {@code type}.
+     * @PRE:
+     *     messageQueues.contains(m)
+     *     !messageMap.contains(type) || !messageMap.get(type).contains(m)
+     *
+     *
+     * @POST:
+     *      messageMap.get(type).contains(m)
+     *
      * <p>
      * @param <T>  The type of the result expected by the completed event.
      * @param type The type to subscribe to,
@@ -22,6 +30,14 @@ public interface MessageBus {
 
     /**
      * Subscribes {@code m} to receive {@link Broadcast}s of type {@code type}.
+     * @PRE:
+     *     messageQueues.contains(m)
+     *     !messageMap.contains(type) || !messageMap.get(type).contains(m)
+     *
+     *
+     * @POST:
+     *      messageMap.get(type).contains(m)
+     *
      * <p>
      * @param type 	The type to subscribe to.
      * @param m    	The subscribing micro-service.
@@ -43,6 +59,14 @@ public interface MessageBus {
     /**
      * Adds the {@link Broadcast} {@code b} to the message queues of all the
      * micro-services subscribed to {@code b.getClass()}.
+     * @PRE:
+     *      messageMap.contains(b);
+     * @POST:
+     *      for(Microservice m  : messageMap.get(b)){
+     *          messageQueues.get(m).contains(b);
+     *
+     *      }
+     *
      * <p>
      * @param b 	The message to added to the queues.
      */
@@ -62,6 +86,14 @@ public interface MessageBus {
 
     /**
      * Allocates a message-queue for the {@link MicroService} {@code m}.
+     * @PRE:
+     *      !messageQueues.contains(m)
+     *
+     *
+     *
+     * @POST:
+     *       messageQueues.contains(m)
+     *
      * <p>
      * @param m the micro-service to create a queue for.
      */
