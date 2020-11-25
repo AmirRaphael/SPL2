@@ -8,24 +8,26 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Write your implementation here!
  * Only private fields and methods can be added to this class.
  */
-public class MessageBusImpl implements MessageBus { // TODO check impl to be thread safe and singleton!!!\
+public class MessageBusImpl implements MessageBus { // TODO check impl to be thread safe and singleton!!!
 
-	private static final MessageBusImpl instance = new MessageBusImpl();
 	private Map<MicroService, Queue<Message>> messageQueues;
 	private Map<Class<? extends Message>,Set<MicroService>> messageMap;
-
-
 	//TODO: maybe we need another map for matching event types to microservices.
+
+	private static class SingletonHolder{
+		private static MessageBusImpl instance = new MessageBusImpl();
+	}
+
+	public static MessageBus getInstance(){
+		return SingletonHolder.instance;
+	}
 
 	private MessageBusImpl(){ // private constructor, as the class is a singleton. TODO implement
 		this.messageQueues = new HashMap<>();
-		this.messageMap = new HashMap<>(); // TODO: for now, the messages each microservice subscribes to are stored in one map, both event and broadcast.
-	}
-	public static MessageBus getInstance(){
-		return instance;
+		this.messageMap = new HashMap<>();
+		// TODO: for now, the messages each microService subscribes to are stored in one map, both event and broadcast.
 	}
 
-	
 	
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
