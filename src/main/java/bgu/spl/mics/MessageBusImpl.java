@@ -10,9 +10,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MessageBusImpl implements MessageBus { // TODO check impl to be thread safe and singleton!!!\
 
-	private static final MessageBusImpl instance = new MessageBusImpl();
+	private static MessageBusImpl instance;
 	private Map<MicroService, Queue<Message>> messageQueues;
 	private Map<Class<? extends Message>,Set<MicroService>> messageMap;
+//	private Map<Class<? extends Message>,Set<MicroService>> eventMap;
+//	private Map<Class<? extends Message>,Set<MicroService>> broadMap;
+
 
 
 	//TODO: maybe we need another map for matching event types to microservices.
@@ -21,7 +24,10 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 		this.messageQueues = new HashMap<>();
 		this.messageMap = new HashMap<>(); // TODO: for now, the messages each microservice subscribes to are stored in one map, both event and broadcast.
 	}
-	public static MessageBus getInstance(){
+	public static synchronized MessageBus getInstance(){
+		if (instance==null){
+			instance = new MessageBusImpl();
+		}
 		return instance;
 	}
 
