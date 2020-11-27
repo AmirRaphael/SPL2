@@ -6,4 +6,5 @@ public class DemoEvent implements Event<Boolean> {
     public void message(){
         System.out.println("Im an event message!");
     }
+
 }

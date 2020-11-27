@@ -65,7 +65,9 @@ public interface MessageBus {
     void sendBroadcast(Broadcast b);
 
     /**
-     * Adds the {@link Event} {@code e} to the message queue of one of the
+     * Adds the {@link Event}
+     *
+     * {@code e} to the message queue of one of the
      * micro-services subscribed to {@code e.getClass()} in a round-robin
      * fashion. This method should be non-blocking.
      * <p>
@@ -116,9 +118,9 @@ public interface MessageBus {
      * <p>
      * @param m The micro-service requesting to take a message from its message
      *          queue.
-     * @return The next message in the {@code m}'s queue (blocking).
+     * @return The next message in the {@code m}'s queue(blocking).
      * @throws InterruptedException if interrupted while waiting for a message
-     *                              to became available.
+     * to became available.
      */
     Message awaitMessage(MicroService m) throws InterruptedException;
     
