@@ -9,10 +9,11 @@ package bgu.spl.mics.application.passiveObjects;
 public class Ewok {
 	int serialNumber;
     boolean available;
+
+
 	public Ewok(int serialNumber){
 	    this.serialNumber = serialNumber;
 	    this.available = true;
-
     }
   
     /**
@@ -25,7 +26,6 @@ public class Ewok {
         if (isAvailable()){
             changeAvailable();
         }
-		
     }
 
     /**
@@ -39,8 +39,8 @@ public class Ewok {
         if (!isAvailable()){
             changeAvailable();
         }
-    	
     }
+
     /**
      * @return available
      */
@@ -50,7 +50,7 @@ public class Ewok {
 
     /**
      * @POST:
-     *   available != @PRE available
+     *   available != @PRE(available)
      */
     public void changeAvailable() { // TODO check if can be private
         this.available = !this.available;
