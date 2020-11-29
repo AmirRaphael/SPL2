@@ -32,8 +32,38 @@ public class Diary {
         return singletonHolder.instance;
     }
 
-    public void setFinishTime(MicroService m, long value) {
-        //todo: implement - each microService can update only one specific field
+    public void setFinishTime(MicroService m, long timeStamp) {
+        switch (m.getName()) {
+            case "Han":
+                HanSoloFinish = timeStamp;
+                break;
+            case "C3PO":
+                C3POFinish = timeStamp;
+                break;
+            case "R2D2":
+                R2D2Deactivate = timeStamp;
+                break;
+        }
+    }
+
+    public void setTerminateTime(MicroService m, long timeStamp) {
+        switch (m.getName()) {
+            case "Leia":
+                LeiaTerminate = timeStamp;
+                break;
+            case "Han":
+                HanSoloFinish = timeStamp;
+                break;
+            case "C3PO":
+                C3POFinish = timeStamp;
+                break;
+            case "R2D2":
+                R2D2Deactivate = timeStamp;
+                break;
+            case "Lando":
+                LandoTerminate = timeStamp;
+                break;
+        }
     }
 
     //todo: make sure this is called only by HanSolo || C3PO

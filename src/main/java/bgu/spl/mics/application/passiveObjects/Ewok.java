@@ -52,7 +52,7 @@ public class Ewok {
      * @POST:
      *   available != @PRE(available)
      */
-    public void changeAvailable() { // TODO check if can be private
+    private void changeAvailable() { // Changed to private
         this.available = !this.available;
     }
 }

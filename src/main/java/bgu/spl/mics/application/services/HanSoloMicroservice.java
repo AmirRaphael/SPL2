@@ -2,8 +2,9 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.application.messages.AttackEvent;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.Terminate;
+import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Attack;
+import bgu.spl.mics.application.passiveObjects.Diary;
 import bgu.spl.mics.application.passiveObjects.Ewoks;
 
 /**
@@ -16,6 +17,7 @@ import bgu.spl.mics.application.passiveObjects.Ewoks;
  */
 public class HanSoloMicroservice extends MicroService {
     private Ewoks ewoks = Ewoks.getInstance();
+    private Diary diary = Diary.getInstance();
 
     public HanSoloMicroservice() {
         super("Han");
@@ -29,10 +31,13 @@ public class HanSoloMicroservice extends MicroService {
             try {
                 Thread.sleep(attack.getDuration());
             } catch (InterruptedException ignored){} //todo: check this fucking exception shit
+            ewoks.releaseEwoks(attack.getSerials());
             complete(event, true);
+            diary.setFinishTime(this, System.currentTimeMillis());
+            diary.incTotalAttacks();
         });
 
-        subscribeBroadcast(Terminate.class, (Terminate terminate) -> {
+        subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
             //todo: implement termination broadcast callback
         });
     }

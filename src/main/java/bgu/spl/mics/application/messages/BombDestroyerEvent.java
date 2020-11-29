@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.messages;
 
-public class BombDestroyerEvent {
+import bgu.spl.mics.Event;
+
+public class BombDestroyerEvent implements Event<Boolean> { // For now this is a Boolean Event
     private long duration;
 
     public BombDestroyerEvent(long duration) {
