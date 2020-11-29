@@ -38,10 +38,7 @@ public class Diary {
 
     //todo: make sure this is called only by HanSolo || C3PO
     public void incTotalAttacks() {
-        int val;
-        do {
-            val = totalAttacks.get();
-        } while (totalAttacks.compareAndSet(val, val+1));
+        totalAttacks.incrementAndGet();
     }
 
     public void createOutputFile() {
