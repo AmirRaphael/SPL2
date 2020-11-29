@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Do not add to this class nothing but a single constructor, getters and setters.
  */
 public class Diary {
-    private AtomicInteger totalAttacks;
+    private AtomicInteger totalAttacks = new AtomicInteger(0);
     private long HanSoloFinish;
     private long C3POFinish;
     private long R2D2Deactivate;
@@ -34,6 +34,14 @@ public class Diary {
 
     public void setFinishTime(MicroService m, long value) {
         //todo: implement - each microService can update only one specific field
+    }
+
+    //todo: make sure this is called only by HanSolo || C3PO
+    public void incTotalAttacks() {
+        int val;
+        do {
+            val = totalAttacks.get();
+        } while (totalAttacks.compareAndSet(val, val+1));
     }
 
     public void createOutputFile() {
