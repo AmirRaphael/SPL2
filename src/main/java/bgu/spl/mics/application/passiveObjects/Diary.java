@@ -52,13 +52,13 @@ public class Diary {
                 LeiaTerminate = timeStamp;
                 break;
             case "Han":
-                HanSoloFinish = timeStamp;
+                HanSoloTerminate = timeStamp;
                 break;
             case "C3PO":
-                C3POFinish = timeStamp;
+                C3POTerminate = timeStamp;
                 break;
             case "R2D2":
-                R2D2Deactivate = timeStamp;
+                R2D2Terminate = timeStamp;
                 break;
             case "Lando":
                 LandoTerminate = timeStamp;

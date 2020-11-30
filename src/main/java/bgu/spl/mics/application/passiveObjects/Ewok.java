@@ -48,11 +48,7 @@ public class Ewok {
         return available;
     }
 
-    /**
-     * @POST:
-     *   available != @PRE(available)
-     */
-    private void changeAvailable() { // Changed to private
+    private void changeAvailable(){
         this.available = !this.available;
     }
 }

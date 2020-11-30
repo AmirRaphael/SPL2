@@ -33,10 +33,4 @@ class EwokTest {
         assertTrue(ewok.isAvailable());
     }
 
-    @Test
-    void changeAvailable() {
-        boolean pre = ewok.isAvailable();
-        ewok.changeAvailable();
-        assertNotEquals(ewok.isAvailable(),pre);
-    }
 }
