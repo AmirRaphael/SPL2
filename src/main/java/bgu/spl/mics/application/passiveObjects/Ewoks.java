@@ -53,7 +53,7 @@ public class Ewoks {
     public void createEwoks(int numOfEwoks) {
         for (int i = 1; i <= numOfEwoks; i++) {
             ewoks.add(new Ewok(i));
-            // Notice - ewoks[j] = Ewok with serial number j+1
+            // Notice : ewoks[j] = Ewok with serial number j+1
         }
     }
 }

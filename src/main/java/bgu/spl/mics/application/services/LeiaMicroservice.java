@@ -1,11 +1,17 @@
 package bgu.spl.mics.application.services;
+import bgu.spl.mics.Event;
+import bgu.spl.mics.Future;
 import bgu.spl.mics.application.messages.AttackEvent;
+import bgu.spl.mics.application.messages.BombDestroyerEvent;
+import bgu.spl.mics.application.messages.DeactivationEvent;
+import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Attack;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.passiveObjects.Diary;
 
 /**
  * LeiaMicroservices Initialized with Attack objects, and sends them as  {@link AttackEvent}.
@@ -17,14 +23,37 @@ import bgu.spl.mics.MicroService;
  */
 public class LeiaMicroservice extends MicroService {
 	private Attack[] attacks;
+	private Diary diary = Diary.getInstance();
+	private List<Future<Boolean>> attackFutures;
+	private long deactivateDuration;
+	private long bombDuration;
+
 	
-    public LeiaMicroservice(Attack[] attacks) {
+    public LeiaMicroservice(Attack[] attacks, long deactivateDuration, long bombDuration) {
         super("Leia");
 		this.attacks = attacks;
+		this.attackFutures = new ArrayList<>();
+		this.deactivateDuration = deactivateDuration;
+		this.bombDuration = bombDuration;
     }
 
     @Override
     protected void initialize() {
-    	
+
+        for(Attack attack : attacks){
+            Future<Boolean> future = sendEvent(new AttackEvent(attack));
+            attackFutures.add(future);
+        }
+        for (Future<Boolean> future : attackFutures){
+            future.get();// get is blocking until future is resolved.
+        }
+        Future<Boolean> deactivate = sendEvent(new DeactivationEvent(deactivateDuration));
+        deactivate.get();// get is blocking until future is resolved.
+        Future<Boolean> bomb = sendEvent(new BombDestroyerEvent(bombDuration));
+        bomb.get();
+        sendBroadcast(new TerminateBroadcast());
+        terminate();
+        diary.setTerminateTime(this,System.currentTimeMillis());
     }
+
 }

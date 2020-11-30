@@ -42,12 +42,10 @@ public class Future<T> {
 	/**
      * Resolves the result of this Future object.
      */
-	public void resolve (T result) {
+	public synchronized void resolve (T result) {
 		this.result = result;
 		this.isDone = true;
-		synchronized (this){ //TODO: still not 100% sure about this one
-			notifyAll();
-		}
+		notifyAll();
 	}
 	
 	/**

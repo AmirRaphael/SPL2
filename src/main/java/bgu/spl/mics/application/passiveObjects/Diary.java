@@ -71,7 +71,7 @@ public class Diary {
         totalAttacks.incrementAndGet();
     }
 
-    public void createOutputFile() {
+    public void createOutputFile(String path) {
         //todo: implement
     }
 }

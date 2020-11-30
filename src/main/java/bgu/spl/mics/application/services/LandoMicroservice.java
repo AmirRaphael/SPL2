@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BombDestroyerEvent;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
+import bgu.spl.mics.application.passiveObjects.Diary;
 
 /**
  * LandoMicroservice
@@ -10,8 +11,8 @@ import bgu.spl.mics.application.messages.TerminateBroadcast;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class LandoMicroservice  extends MicroService {
-
-    public LandoMicroservice(long duration) {
+    private Diary diary = Diary.getInstance();
+    public LandoMicroservice() {
         super("Lando");
     }
 
@@ -27,7 +28,8 @@ public class LandoMicroservice  extends MicroService {
        });
 
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
-            //todo: implement termination broadcast callback
+            terminate();
+            diary.setTerminateTime(this,System.currentTimeMillis());
         });
     }
 }

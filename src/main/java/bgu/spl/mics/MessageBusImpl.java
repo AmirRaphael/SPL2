@@ -103,10 +103,6 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 		try{
 			return messageQueues.get(m).take();
 		} catch(InterruptedException ignored  ){} //TODO: check what needs to happen here
-
-
-
-		
 		return null;
 	}
 }

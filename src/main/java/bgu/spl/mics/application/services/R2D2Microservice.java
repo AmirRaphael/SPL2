@@ -15,7 +15,7 @@ import bgu.spl.mics.application.passiveObjects.Diary;
 public class R2D2Microservice extends MicroService {
     private Diary diary = Diary.getInstance();
 
-    public R2D2Microservice(long duration) {
+    public R2D2Microservice() {
         super("R2D2");
     }
 
@@ -32,7 +32,8 @@ public class R2D2Microservice extends MicroService {
         });
 
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
-            //todo: implement termination broadcast callback
+            terminate();
+            diary.setTerminateTime(this,System.currentTimeMillis());
         });
     }
 }

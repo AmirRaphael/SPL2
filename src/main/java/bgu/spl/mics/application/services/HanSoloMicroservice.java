@@ -38,7 +38,8 @@ public class HanSoloMicroservice extends MicroService {
         });
 
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
-            //todo: implement termination broadcast callback
+            terminate();
+            diary.setTerminateTime(this,System.currentTimeMillis());
         });
     }
 }
