@@ -16,17 +16,20 @@ import java.util.concurrent.CountDownLatch;
  */
 public class Main {
 	public static void main(String[] args) {
+		System.out.println("----Program Starts----");
 		try{
 			Gson gson = new Gson();
 			JsonReader reader = new JsonReader(new FileReader(args[0]));
 			JsonTranslator translator = gson.fromJson(reader,JsonTranslator.class);
+
 			Ewoks.getInstance().createEwoks(translator.getEwoks());
-			CountDownLatch initDone = new CountDownLatch(4);
-			Thread leia = new Thread(new LeiaMicroservice(translator.getAttacks(),translator.getR2D2(),translator.getLando(),initDone));
-			Thread c3po = new Thread(new C3POMicroservice(initDone));
-			Thread han = new Thread(new HanSoloMicroservice(initDone));
-			Thread r2d2 = new Thread(new R2D2Microservice(initDone));
-			Thread lando = new Thread(new LandoMicroservice(initDone));
+
+			CountDownLatch initializeDoneSignal = new CountDownLatch(4);
+			Thread leia = new Thread(new LeiaMicroservice(translator.getAttacks(),translator.getR2D2(),translator.getLando(),initializeDoneSignal));
+			Thread c3po = new Thread(new C3POMicroservice(initializeDoneSignal));
+			Thread han = new Thread(new HanSoloMicroservice(initializeDoneSignal));
+			Thread r2d2 = new Thread(new R2D2Microservice(initializeDoneSignal));
+			Thread lando = new Thread(new LandoMicroservice(initializeDoneSignal));
 
 			leia.start();
 			han.start();
@@ -34,19 +37,16 @@ public class Main {
 			r2d2.start();
 			lando.start();
 
-
 			leia.join();
 			han.join();
 			r2d2.join();
 			c3po.join();
 			lando.join();
+
 			Diary.getInstance().createOutputFile(args[1]);
 
-
-
 		} catch (IOException | InterruptedException e){
-			System.out.println("Fuck you");
+			e.printStackTrace();
 		}
-
 	}
 }

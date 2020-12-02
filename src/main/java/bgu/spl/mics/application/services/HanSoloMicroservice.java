@@ -31,10 +31,12 @@ public class HanSoloMicroservice extends MicroService {
     protected void initialize() {
         subscribeEvent(AttackEvent.class, (AttackEvent event) -> {
             Attack attack = event.getAttack();
-            ewoks.acquireEwoks(attack.getSerials()); //todo: make this concurrent
+            System.out.println(getName() + " acquiring ewkos!");
+            ewoks.acquireEwoks(attack.getSerials());
+            System.out.println(getName() + " attacking!");
             try {
                 Thread.sleep(attack.getDuration());
-            } catch (InterruptedException ignored){} //todo: check this fucking exception shit
+            } catch (InterruptedException ignored){}
             ewoks.releaseEwoks(attack.getSerials());
             complete(event, true);
             diary.setFinishTime(this, System.currentTimeMillis());

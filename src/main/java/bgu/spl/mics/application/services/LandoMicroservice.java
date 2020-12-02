@@ -23,6 +23,7 @@ public class LandoMicroservice  extends MicroService {
     @Override
     protected void initialize() {
        subscribeEvent(BombDestroyerEvent.class, (BombDestroyerEvent event) -> {
+           System.out.println("Lando bombing the Death Star!");
            try {
                Thread.sleep(event.getDuration());
            } catch (InterruptedException e) {

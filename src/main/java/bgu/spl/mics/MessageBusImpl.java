@@ -2,23 +2,24 @@ package bgu.spl.mics;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;//TODO : explain!
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
  * Write your implementation here!
  * Only private fields and methods can be added to this class.
  */
-public class MessageBusImpl implements MessageBus { // TODO check impl to be thread safe and singleton!!!
+public class MessageBusImpl implements MessageBus { // TODO check impl to be thread safe.
 
 	private Map<MicroService, LinkedBlockingQueue<Message>> messageQueues;
-	private Map<Class<? extends Event<?>>,Queue<MicroService>> eventMap;
-	private Map<Class<? extends Broadcast>,Set<MicroService>> broadMap;
-	private Map<Event<?>,Future> futureMap;
+	private Map<Class<? extends Event<?>>, Queue<MicroService>> eventMap;
+	private Map<Class<? extends Broadcast>, Set<MicroService>> broadMap;
+	private Map<Event<?>, Future> futureMap;
+
 	private final Object roundRobinLock = new Object();
-
-	//TODO: maybe we need another map for matching event types to microservices.
-
+	private static final int MAX_PERMITS = 100;	// todo: find the right number
+	private final Semaphore semaphore = new Semaphore(MAX_PERMITS, true);
 
 	private static class SingletonHolder{
 		private static final MessageBusImpl instance = new MessageBusImpl();
@@ -37,27 +38,49 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	}
 	
 	@Override
-	public synchronized <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		if(!messageQueues.containsKey(m)){
-			throw new IllegalStateException("Microservice m is not registered!");
+	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+		try {
+			semaphore.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		if(!this.eventMap.containsKey(type)){
-			this.eventMap.put(type,new LinkedBlockingQueue<>()); //TODO : check prefered container
-		}
-		this.eventMap.get(type).add(m);
 
-		
+		if(!messageQueues.containsKey(m)){
+			throw new IllegalStateException("MicroService " + m.getName() + " is not registered!");
+		}
+
+		synchronized (this) {
+			if (!this.eventMap.containsKey(type)) {
+				this.eventMap.put(type, new LinkedBlockingQueue<MicroService>());
+			}
+		}
+		Queue<MicroService> microServiceQueue = this.eventMap.get(type);
+		microServiceQueue.add(m);
+
+		semaphore.release();
 	}
 
 	@Override
-	public synchronized void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+		try {
+			semaphore.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 		if(!messageQueues.containsKey(m)){
-			throw new IllegalStateException("Microservice m is not registered!");
+			throw new IllegalStateException("MicroService " + m.getName() + " is not registered!");
 		}
-		if(!this.broadMap.containsKey(type)){
-			this.broadMap.put(type,ConcurrentHashMap.newKeySet());
+
+		synchronized (this) {
+			if (!this.broadMap.containsKey(type)) {
+				this.broadMap.put(type, ConcurrentHashMap.newKeySet());
+			}
 		}
-		this.broadMap.get(type).add(m);
+		Set<MicroService> microServiceSet = this.broadMap.get(type);
+		microServiceSet.add(m);
+
+		semaphore.release();
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -67,50 +90,82 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-		for(MicroService m : broadMap.get(b.getClass())){
-			this.messageQueues.get(m).add(b);
+		try {
+			semaphore.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+
+		// Adds broadcast to all the relevant MicroService message-queues
+		for(MicroService microService : broadMap.get(b.getClass())){
+			Queue<Message> messageQueue = this.messageQueues.get(microService);
+			messageQueue.add(b);
+		}
+
+		semaphore.release();
 	}
 
-	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
+		try {
+			semaphore.acquire();
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
+		}
+
 		synchronized (roundRobinLock){
 			Queue<MicroService> eventQueue = eventMap.get(e.getClass());
-			MicroService receiver  = eventQueue.poll();
-			if(receiver!=null){
+			MicroService receiver = eventQueue.poll();
+			if(receiver != null){
 				messageQueues.get(receiver).add(e);
 				eventQueue.add(receiver);
 				Future<T> future = new Future<>();
 				futureMap.put(e,future);
+				semaphore.release();
 				return future;
 			}
 		}
+		semaphore.release();
 		return null;
 	}
 
 	@Override
 	public void register(MicroService m) {
-		this.messageQueues.put(m,new LinkedBlockingQueue<>()); //TODO: check if concurrent container needed.
-		System.out.println(m.getName()+" registered!");
+		this.messageQueues.put(m, new LinkedBlockingQueue<>());
+		System.out.println(m.getName() + " registered!");
 	}
 
 	@Override
 	public void unregister(MicroService m) {
+		try {
+			semaphore.acquire(MAX_PERMITS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		this.messageQueues.remove(m);
-		for (Class<? extends Event> e : eventMap.keySet()){
-			eventMap.get(e).remove(m);
+
+		for (Class<? extends Event> event : eventMap.keySet()){
+			Queue<MicroService> queue = eventMap.get(event);
+			queue.remove(m);
 		}
-		for (Class<? extends Broadcast> b : broadMap.keySet()){
-			broadMap.get(b).remove(m);
+
+		for (Class<? extends Broadcast> broadcast : broadMap.keySet()){
+			Set<MicroService> set = broadMap.get(broadcast);
+			set.remove(m);
 		}
+		semaphore.release(MAX_PERMITS);
 	}
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
-		try{
+		if (!messageQueues.containsKey(m)){
+			throw new IllegalStateException("MicroService " + m.getName() + " is not registered!");
+		}
+		try {
 			return messageQueues.get(m).take();
-		} catch(InterruptedException ignored  ){} //TODO: check what needs to happen here
-		return null;
+		} catch(InterruptedException e) {
+			System.out.println(m.getName() + " was interrupted while waiting for a message");
+			throw e;
+		}
 	}
 }
