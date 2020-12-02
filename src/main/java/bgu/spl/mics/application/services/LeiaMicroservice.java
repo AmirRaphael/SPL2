@@ -1,14 +1,12 @@
 package bgu.spl.mics.application.services;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
-import bgu.spl.mics.application.messages.AttackEvent;
-import bgu.spl.mics.application.messages.BombDestroyerEvent;
-import bgu.spl.mics.application.messages.DeactivationEvent;
-import bgu.spl.mics.application.messages.TerminateBroadcast;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.Attack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.Diary;
@@ -27,33 +25,44 @@ public class LeiaMicroservice extends MicroService {
 	private List<Future<Boolean>> attackFutures;
 	private long deactivateDuration;
 	private long bombDuration;
+	private CountDownLatch latch;
 
 	
-    public LeiaMicroservice(Attack[] attacks, long deactivateDuration, long bombDuration) {
+    public LeiaMicroservice(Attack[] attacks, long deactivateDuration, long bombDuration , CountDownLatch latch) {
         super("Leia");
 		this.attacks = attacks;
 		this.attackFutures = new ArrayList<>();
 		this.deactivateDuration = deactivateDuration;
 		this.bombDuration = bombDuration;
+		this.latch = latch;
     }
 
     @Override
     protected void initialize() {
-
-        for(Attack attack : attacks){
-            Future<Boolean> future = sendEvent(new AttackEvent(attack));
-            attackFutures.add(future);
-        }
-        for (Future<Boolean> future : attackFutures){
-            future.get();// get is blocking until future is resolved.
-        }
-        Future<Boolean> deactivate = sendEvent(new DeactivationEvent(deactivateDuration));
-        deactivate.get();// get is blocking until future is resolved.
-        Future<Boolean> bomb = sendEvent(new BombDestroyerEvent(bombDuration));
-        bomb.get();
-        sendBroadcast(new TerminateBroadcast());
-        terminate();
-        diary.setTerminateTime(this,System.currentTimeMillis());
+        subscribeEvent(BattleEvent.class,(BattleEvent event)->{
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            for(Attack attack : attacks){
+                Future<Boolean> future = sendEvent(new AttackEvent(attack));
+                attackFutures.add(future);
+            }
+            for (Future<Boolean> future : attackFutures){
+                future.get();// get is blocking until future is resolved.
+            }
+            Future<Boolean> deactivate = sendEvent(new DeactivationEvent(deactivateDuration));
+            deactivate.get();// get is blocking until future is resolved.
+            Future<Boolean> bomb = sendEvent(new BombDestroyerEvent(bombDuration));
+            bomb.get();
+            sendBroadcast(new TerminateBroadcast());
+        });
+        subscribeBroadcast(TerminateBroadcast.class,(TerminateBroadcast b)->{
+            terminate();
+            diary.setTerminateTime(this,System.currentTimeMillis());
+        });
+        sendEvent(new BattleEvent());
     }
 
 }

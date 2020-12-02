@@ -8,6 +8,7 @@ import com.google.gson.stream.JsonReader;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 
 /** This is the Main class of the application. You should parse the input file,
  * create the different components of the application, and run the system.
@@ -20,11 +21,13 @@ public class Main {
 			JsonReader reader = new JsonReader(new FileReader(args[0]));
 			JsonTranslator translator = gson.fromJson(reader,JsonTranslator.class);
 			Ewoks.getInstance().createEwoks(translator.getEwoks());
-			Thread leia = new Thread(new LeiaMicroservice(translator.getAttacks(),translator.getR2D2(),translator.getLando()));
-			Thread c3po = new Thread(new C3POMicroservice());
-			Thread han = new Thread(new HanSoloMicroservice());
-			Thread r2d2 = new Thread(new R2D2Microservice());
-			Thread lando = new Thread(new LandoMicroservice());
+			CountDownLatch initDone = new CountDownLatch(4);
+			Thread leia = new Thread(new LeiaMicroservice(translator.getAttacks(),translator.getR2D2(),translator.getLando(),initDone));
+			Thread c3po = new Thread(new C3POMicroservice(initDone));
+			Thread han = new Thread(new HanSoloMicroservice(initDone));
+			Thread r2d2 = new Thread(new R2D2Microservice(initDone));
+			Thread lando = new Thread(new LandoMicroservice(initDone));
+
 			leia.start();
 			han.start();
 			c3po.start();

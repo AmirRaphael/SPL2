@@ -2,7 +2,10 @@ package bgu.spl.mics.application.passiveObjects;
 
 
 import bgu.spl.mics.MicroService;
+import com.google.gson.Gson;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -66,12 +69,22 @@ public class Diary {
         }
     }
 
-    //todo: make sure this is called only by HanSolo || C3PO
-    public void incTotalAttacks() {
-        totalAttacks.incrementAndGet();
+
+    public void incTotalAttacks(MicroService m) {
+        if (m.getName().equals("Han") || m.getName().equals("C3PO") ){
+            totalAttacks.incrementAndGet();
+        }
     }
 
     public void createOutputFile(String path) {
-        //todo: implement
+        Gson gson = new Gson();
+        try{
+            FileWriter fileWriter = new FileWriter(path);
+            fileWriter.write(gson.toJson(this));
+            fileWriter.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
     }
 }

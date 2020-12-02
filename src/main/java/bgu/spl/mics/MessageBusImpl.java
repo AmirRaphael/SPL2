@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;//TODO : explain!
 
 /**
@@ -14,6 +15,7 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	private Map<Class<? extends Event<?>>,Queue<MicroService>> eventMap;
 	private Map<Class<? extends Broadcast>,Set<MicroService>> broadMap;
 	private Map<Event<?>,Future> futureMap;
+	private final Object roundRobinLock = new Object();
 
 	//TODO: maybe we need another map for matching event types to microservices.
 
@@ -27,15 +29,18 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	}
 
 	private MessageBusImpl(){ // private constructor, as the class is a singleton.
-		this.messageQueues = new HashMap<>();
-		this.eventMap = new HashMap<>();
-		this.broadMap = new HashMap<>();
-		this.futureMap = new HashMap<>();
+		this.messageQueues = new ConcurrentHashMap<>();
+		this.eventMap = new ConcurrentHashMap<>();
+		this.broadMap = new ConcurrentHashMap<>();
+		this.futureMap = new ConcurrentHashMap<>();
 
 	}
 	
 	@Override
-	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+	public synchronized <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+		if(!messageQueues.containsKey(m)){
+			throw new IllegalStateException("Microservice m is not registered!");
+		}
 		if(!this.eventMap.containsKey(type)){
 			this.eventMap.put(type,new LinkedBlockingQueue<>()); //TODO : check prefered container
 		}
@@ -45,12 +50,12 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	}
 
 	@Override
-	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+	public synchronized void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
 		if(!messageQueues.containsKey(m)){
 			throw new IllegalStateException("Microservice m is not registered!");
 		}
 		if(!this.broadMap.containsKey(type)){
-			this.broadMap.put(type,new HashSet<>());
+			this.broadMap.put(type,ConcurrentHashMap.newKeySet());
 		}
 		this.broadMap.get(type).add(m);
 	}
@@ -70,14 +75,16 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		Queue<MicroService> eventQueue = eventMap.get(e.getClass());
-		MicroService receiver  = eventQueue.poll();
-		if(receiver!=null){
-			messageQueues.get(receiver).add(e);
-			eventQueue.add(receiver);
-			Future<T> future = new Future<>();
-			futureMap.put(e,future);
-			return future;
+		synchronized (roundRobinLock){
+			Queue<MicroService> eventQueue = eventMap.get(e.getClass());
+			MicroService receiver  = eventQueue.poll();
+			if(receiver!=null){
+				messageQueues.get(receiver).add(e);
+				eventQueue.add(receiver);
+				Future<T> future = new Future<>();
+				futureMap.put(e,future);
+				return future;
+			}
 		}
 		return null;
 	}
@@ -85,6 +92,7 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	@Override
 	public void register(MicroService m) {
 		this.messageQueues.put(m,new LinkedBlockingQueue<>()); //TODO: check if concurrent container needed.
+		System.out.println(m.getName()+" registered!");
 	}
 
 	@Override
