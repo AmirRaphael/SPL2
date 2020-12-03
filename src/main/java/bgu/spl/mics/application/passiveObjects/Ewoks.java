@@ -26,7 +26,6 @@ public class Ewoks {
     return singletonHolder.instance;
 }
 
-    //todo: implement in a concurrent thread-safe way (this should be a blocking method)
     public void acquireEwoks(List<Integer> serials) {
         synchronized (LOCK) {
             for (int serialNum : serials) {
@@ -40,7 +39,6 @@ public class Ewoks {
         }
     }
 
-    //todo: implement in a concurrent thread-safe way (this should be a blocking method)
     public void releaseEwoks(List<Integer> serials) {
         synchronized (LOCK) {
             for (int serialNum : serials) {

@@ -34,7 +34,6 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 		this.eventMap = new ConcurrentHashMap<>();
 		this.broadMap = new ConcurrentHashMap<>();
 		this.futureMap = new ConcurrentHashMap<>();
-
 	}
 	
 	@Override
@@ -143,7 +142,7 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 			e.printStackTrace();
 		}
 		this.messageQueues.remove(m);
-
+		Thread.activeCount();
 		for (Class<? extends Event> event : eventMap.keySet()){
 			Queue<MicroService> queue = eventMap.get(event);
 			queue.remove(m);

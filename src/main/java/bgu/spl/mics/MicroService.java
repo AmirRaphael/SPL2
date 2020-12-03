@@ -22,7 +22,6 @@ import java.util.Map;
  * <p>
  */
 public abstract class MicroService implements Runnable {
-
     private boolean terminate;
     private String name;
     private Map<Class<? extends Message>, Callback> messageCallbackMap;
