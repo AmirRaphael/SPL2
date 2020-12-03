@@ -95,10 +95,12 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 			e.printStackTrace();
 		}
 
-		// Adds broadcast to all the relevant MicroService message-queues
-		for(MicroService microService : broadMap.get(b.getClass())){
-			Queue<Message> messageQueue = this.messageQueues.get(microService);
-			messageQueue.add(b);
+		if (broadMap.get(b.getClass()) != null){
+			// Adds broadcast to all the relevant MicroService message-queues
+			for(MicroService microService : broadMap.get(b.getClass())){
+				Queue<Message> messageQueue = this.messageQueues.get(microService);
+				messageQueue.add(b);
+			}
 		}
 
 		semaphore.release();
@@ -114,14 +116,16 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 
 		synchronized (roundRobinLock){
 			Queue<MicroService> eventQueue = eventMap.get(e.getClass());
-			MicroService receiver = eventQueue.poll();
-			if(receiver != null){
-				messageQueues.get(receiver).add(e);
-				eventQueue.add(receiver);
-				Future<T> future = new Future<>();
-				futureMap.put(e,future);
-				semaphore.release();
-				return future;
+			if (eventQueue != null){
+				MicroService receiver = eventQueue.poll();
+				if(receiver != null){
+					messageQueues.get(receiver).add(e);
+					eventQueue.add(receiver);
+					Future<T> future = new Future<>();
+					futureMap.put(e,future);
+					semaphore.release();
+					return future;
+				}
 			}
 		}
 		semaphore.release();
