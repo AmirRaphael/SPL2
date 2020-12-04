@@ -17,10 +17,12 @@ import java.util.concurrent.CountDownLatch;
 public class R2D2Microservice extends MicroService {
     private Diary diary = Diary.getInstance();
     private CountDownLatch latch;
+    private CountDownLatch termLatch;
 
-    public R2D2Microservice(CountDownLatch latch) {
+    public R2D2Microservice(CountDownLatch latch,CountDownLatch termLatch) {
         super("R2D2");
         this.latch = latch;
+        this.termLatch =termLatch;
     }
 
     @Override
@@ -39,6 +41,7 @@ public class R2D2Microservice extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            termLatch.countDown();
         });
         latch.countDown();
     }

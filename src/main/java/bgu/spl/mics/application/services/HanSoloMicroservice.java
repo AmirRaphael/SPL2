@@ -21,10 +21,12 @@ public class HanSoloMicroservice extends MicroService {
     private Ewoks ewoks = Ewoks.getInstance();
     private Diary diary = Diary.getInstance();
     private CountDownLatch latch;
+    private CountDownLatch termLatch;
 
-    public HanSoloMicroservice(CountDownLatch latch) {
+    public HanSoloMicroservice(CountDownLatch latch, CountDownLatch termLatch) {
         super("Han");
         this.latch = latch;
+        this.termLatch = termLatch;
     }
 
     @Override
@@ -46,6 +48,7 @@ public class HanSoloMicroservice extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            termLatch.countDown();
         });
         latch.countDown();
     }

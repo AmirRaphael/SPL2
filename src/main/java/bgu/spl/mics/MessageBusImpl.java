@@ -83,8 +83,18 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public <T> void complete(Event<T> e, T result) {
-		futureMap.get(e).resolve(result);
+	public  <T> void complete(Event<T> e, T result) {
+
+		try{
+			Future future=futureMap.get(e);
+			future.resolve(result);
+
+		}
+		catch (NullPointerException exception){
+			System.out.println("fuck you");
+		}
+
+
 	}
 
 	@Override
@@ -96,9 +106,11 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 		}
 
 		// Adds broadcast to all the relevant MicroService message-queues
-		for(MicroService microService : broadMap.get(b.getClass())){
-			Queue<Message> messageQueue = this.messageQueues.get(microService);
-			messageQueue.add(b);
+		if (broadMap.get(b.getClass())!=null){
+			for(MicroService microService : broadMap.get(b.getClass())){
+				Queue<Message> messageQueue = this.messageQueues.get(microService);
+				messageQueue.add(b);
+			}
 		}
 
 		semaphore.release();
@@ -111,17 +123,18 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 		} catch (InterruptedException ex) {
 			ex.printStackTrace();
 		}
-
 		synchronized (roundRobinLock){
 			Queue<MicroService> eventQueue = eventMap.get(e.getClass());
-			MicroService receiver = eventQueue.poll();
-			if(receiver != null){
-				messageQueues.get(receiver).add(e);
-				eventQueue.add(receiver);
-				Future<T> future = new Future<>();
-				futureMap.put(e,future);
-				semaphore.release();
-				return future;
+			if(eventQueue!=null){
+				MicroService receiver = eventQueue.poll();
+				if(receiver != null){
+					Future<T> future = new Future<>();
+					futureMap.put(e,future);
+					messageQueues.get(receiver).add(e);
+					eventQueue.add(receiver);
+					semaphore.release();
+					return future;
+				}
 			}
 		}
 		semaphore.release();
@@ -131,7 +144,7 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	@Override
 	public void register(MicroService m) {
 		this.messageQueues.put(m, new LinkedBlockingQueue<>());
-		System.out.println(m.getName() + " registered!");
+//		System.out.println(m.getName() + " registered!");
 	}
 
 	@Override
@@ -142,7 +155,7 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 			e.printStackTrace();
 		}
 		this.messageQueues.remove(m);
-		Thread.activeCount();
+
 		for (Class<? extends Event> event : eventMap.keySet()){
 			Queue<MicroService> queue = eventMap.get(event);
 			queue.remove(m);

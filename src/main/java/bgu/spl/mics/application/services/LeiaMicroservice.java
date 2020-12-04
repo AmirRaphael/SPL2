@@ -25,14 +25,17 @@ public class LeiaMicroservice extends MicroService {
 	private long deactivateDuration;
 	private long bombDuration;
 	private CountDownLatch latch;
+    private CountDownLatch termLatch;
 
-	
-    public LeiaMicroservice(Attack[] attacks, long deactivateDuration, long bombDuration , CountDownLatch latch) {
+
+
+    public LeiaMicroservice(Attack[] attacks, long deactivateDuration, long bombDuration , CountDownLatch latch,CountDownLatch termLatch) {
         super("Leia");
 		this.attacks = attacks;
 		this.deactivateDuration = deactivateDuration;
 		this.bombDuration = bombDuration;
 		this.latch = latch;
+		this.termLatch =termLatch;
     }
 
     @Override
@@ -62,6 +65,7 @@ public class LeiaMicroservice extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class,(TerminateBroadcast b)->{
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            termLatch.countDown();
         });
         sendEvent(new BattleEvent());
     }

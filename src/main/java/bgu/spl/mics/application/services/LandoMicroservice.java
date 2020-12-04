@@ -15,9 +15,12 @@ import java.util.concurrent.CountDownLatch;
 public class LandoMicroservice  extends MicroService {
     private Diary diary = Diary.getInstance();
     private CountDownLatch latch;
-    public LandoMicroservice(CountDownLatch latch) {
+    private CountDownLatch termLatch;
+
+    public LandoMicroservice(CountDownLatch latch,CountDownLatch termLatch) {
         super("Lando");
         this.latch = latch;
+        this.termLatch = termLatch;
     }
 
     @Override
@@ -35,6 +38,7 @@ public class LandoMicroservice  extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            termLatch.countDown();
         });
         latch.countDown();
     }
