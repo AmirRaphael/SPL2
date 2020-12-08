@@ -1,4 +1,5 @@
 package bgu.spl.mics.application.services;
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.DeactivationEvent;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
@@ -16,11 +17,9 @@ import java.util.concurrent.CountDownLatch;
  */
 public class R2D2Microservice extends MicroService {
     private Diary diary = Diary.getInstance();
-    private CountDownLatch latch;
 
-    public R2D2Microservice(CountDownLatch latch) {
+    public R2D2Microservice() {
         super("R2D2");
-        this.latch = latch;
     }
 
     @Override
@@ -39,7 +38,8 @@ public class R2D2Microservice extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            Main.terminationDoneSignal.countDown();
         });
-        latch.countDown();
+        Main.initializeDoneSignal.countDown();
     }
 }

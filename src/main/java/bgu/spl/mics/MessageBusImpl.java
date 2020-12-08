@@ -10,7 +10,7 @@ import java.util.concurrent.Semaphore;
  * Write your implementation here!
  * Only private fields and methods can be added to this class.
  */
-public class MessageBusImpl implements MessageBus { // TODO check impl to be thread safe.
+public class MessageBusImpl implements MessageBus {
 
 	private Map<MicroService, LinkedBlockingQueue<Message>> messageQueues;
 	private Map<Class<? extends Event<?>>, Queue<MicroService>> eventMap;
@@ -18,7 +18,7 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 	private Map<Event<?>, Future> futureMap;
 
 	private final Object roundRobinLock = new Object();
-	private static final int MAX_PERMITS = 100;	// todo: find the right number
+	private static final int MAX_PERMITS = 100;	// todo: add explanation
 	private final Semaphore semaphore = new Semaphore(MAX_PERMITS, true);
 
 	private static class SingletonHolder{
@@ -119,10 +119,10 @@ public class MessageBusImpl implements MessageBus { // TODO check impl to be thr
 			if (eventQueue != null){
 				MicroService receiver = eventQueue.poll();
 				if(receiver != null){
-					messageQueues.get(receiver).add(e);
-					eventQueue.add(receiver);
 					Future<T> future = new Future<>();
 					futureMap.put(e,future);
+					messageQueues.get(receiver).add(e);
+					eventQueue.add(receiver);
 					semaphore.release();
 					return future;
 				}

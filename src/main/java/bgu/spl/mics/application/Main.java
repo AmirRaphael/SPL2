@@ -5,7 +5,6 @@ import bgu.spl.mics.application.passiveObjects.Ewoks;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -15,6 +14,9 @@ import java.util.concurrent.CountDownLatch;
  * In the end, you should output a JSON.
  */
 public class Main {
+	public static CountDownLatch initializeDoneSignal = new CountDownLatch(4);
+	public static CountDownLatch terminationDoneSignal = new CountDownLatch(5);
+
 	public static void main(String[] args) {
 		System.out.println("----Program Starts----");
 		try{
@@ -24,12 +26,14 @@ public class Main {
 
 			Ewoks.getInstance().createEwoks(translator.getEwoks());
 
-			CountDownLatch initializeDoneSignal = new CountDownLatch(4);
-			Thread leia = new Thread(new LeiaMicroservice(translator.getAttacks(),translator.getR2D2(),translator.getLando(),initializeDoneSignal));
-			Thread c3po = new Thread(new C3POMicroservice(initializeDoneSignal));
-			Thread han = new Thread(new HanSoloMicroservice(initializeDoneSignal));
-			Thread r2d2 = new Thread(new R2D2Microservice(initializeDoneSignal));
-			Thread lando = new Thread(new LandoMicroservice(initializeDoneSignal));
+			LeiaMicroservice leiaMicroservice =  new LeiaMicroservice(translator.getAttacks());
+			leiaMicroservice.setDeactivateDuration(translator.getR2D2());
+			leiaMicroservice.setBombDuration(translator.getLando());
+			Thread leia = new Thread(leiaMicroservice);
+			Thread c3po = new Thread(new C3POMicroservice());
+			Thread han = new Thread(new HanSoloMicroservice());
+			Thread r2d2 = new Thread(new R2D2Microservice());
+			Thread lando = new Thread(new LandoMicroservice());
 
 			leia.start();
 			han.start();
@@ -37,12 +41,7 @@ public class Main {
 			r2d2.start();
 			lando.start();
 
-			leia.join();
-			han.join();
-			r2d2.join();
-			c3po.join();
-			lando.join();
-
+			terminationDoneSignal.await();
 			Diary.getInstance().createOutputFile(args[1]);
 
 		} catch (IOException | InterruptedException e){

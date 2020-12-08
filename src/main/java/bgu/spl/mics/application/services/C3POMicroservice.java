@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.AttackEvent;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Attack;
@@ -20,11 +21,9 @@ import java.util.concurrent.CountDownLatch;
 public class C3POMicroservice extends MicroService {
     private Ewoks ewoks = Ewoks.getInstance();
     private Diary diary = Diary.getInstance();
-    private CountDownLatch latch;
 	
-    public C3POMicroservice(CountDownLatch latch) {
+    public C3POMicroservice() {
         super("C3PO");
-        this.latch=latch;
     }
 
     @Override
@@ -46,7 +45,8 @@ public class C3POMicroservice extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            Main.terminationDoneSignal.countDown();
         });
-        latch.countDown();
+        Main.initializeDoneSignal.countDown();
     }
 }

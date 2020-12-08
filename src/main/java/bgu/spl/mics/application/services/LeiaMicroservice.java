@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.Attack;
 
@@ -24,22 +25,17 @@ public class LeiaMicroservice extends MicroService {
 	private Diary diary = Diary.getInstance();
 	private long deactivateDuration;
 	private long bombDuration;
-	private CountDownLatch latch;
 
-	
-    public LeiaMicroservice(Attack[] attacks, long deactivateDuration, long bombDuration , CountDownLatch latch) {
+    public LeiaMicroservice(Attack[] attacks) {
         super("Leia");
 		this.attacks = attacks;
-		this.deactivateDuration = deactivateDuration;
-		this.bombDuration = bombDuration;
-		this.latch = latch;
     }
 
     @Override
     protected void initialize() {
         subscribeEvent(BattleEvent.class,(BattleEvent event)->{
             try {
-                latch.await();
+                Main.initializeDoneSignal.await();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -62,8 +58,16 @@ public class LeiaMicroservice extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class,(TerminateBroadcast b)->{
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            Main.terminationDoneSignal.countDown();
         });
         sendEvent(new BattleEvent());
     }
 
+    public void setDeactivateDuration(long deactivateDuration) {
+        this.deactivateDuration = deactivateDuration;
+    }
+
+    public void setBombDuration(long bombDuration) {
+        this.bombDuration = bombDuration;
+    }
 }

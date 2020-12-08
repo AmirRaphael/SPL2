@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.BombDestroyerEvent;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Diary;
@@ -14,10 +15,9 @@ import java.util.concurrent.CountDownLatch;
  */
 public class LandoMicroservice  extends MicroService {
     private Diary diary = Diary.getInstance();
-    private CountDownLatch latch;
-    public LandoMicroservice(CountDownLatch latch) {
+
+    public LandoMicroservice() {
         super("Lando");
-        this.latch = latch;
     }
 
     @Override
@@ -35,7 +35,8 @@ public class LandoMicroservice  extends MicroService {
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast broadcast) -> {
             terminate();
             diary.setTerminateTime(this,System.currentTimeMillis());
+            Main.terminationDoneSignal.countDown();
         });
-        latch.countDown();
+        Main.initializeDoneSignal.countDown();
     }
 }
