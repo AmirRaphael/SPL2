@@ -22,10 +22,15 @@ public class Ewok {
      * @POST: available == false.
      *
      */
-    public void acquire() {
-        if (isAvailable()){
-            changeAvailable();
+    public synchronized void acquire() {
+        while (!isAvailable()){
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        changeAvailable();
     }
 
     /**
@@ -35,9 +40,10 @@ public class Ewok {
      * @POST:
      *    available == true.
      */
-    public void release() {
+    public synchronized void release() {
         if (!isAvailable()){
             changeAvailable();
+            this.notifyAll();
         }
     }
 

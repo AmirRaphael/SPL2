@@ -12,7 +12,6 @@ import java.util.List;
  * You can add ONLY private methods and fields to this class.
  */
 public class Ewoks {
-    private static final Object LOCK = new Object();
     private List<Ewok> ewoks;
 
     private static class singletonHolder { private static final Ewoks instance = new Ewoks(); }
@@ -26,25 +25,15 @@ public class Ewoks {
 }
 
     public void acquireEwoks(List<Integer> serials) {
-        synchronized (LOCK) {
-            // Note that the "serials" list is sorted
-            for (int serialNum : serials) {
-                while (!ewoks.get(serialNum-1).isAvailable()) {
-                    try {
-                        LOCK.wait();
-                    } catch (InterruptedException ignored){}
-                }
-                ewoks.get(serialNum-1).acquire();
-            }
+        // Note that the "serials" list is sorted
+        for (int serialNum : serials) {
+            ewoks.get(serialNum-1).acquire();
         }
     }
 
     public void releaseEwoks(List<Integer> serials) {
-        synchronized (LOCK) {
-            for (int serialNum : serials) {
-                ewoks.get(serialNum-1).release();
-            }
-            LOCK.notifyAll();
+        for (int serialNum : serials) {
+            ewoks.get(serialNum-1).release();
         }
     }
 
