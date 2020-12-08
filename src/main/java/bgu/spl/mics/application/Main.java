@@ -20,7 +20,6 @@ public class Main {
 	public static void main(String[] args) {
 		initializeDoneSignal = new CountDownLatch(4);
 		terminationDoneSignal = new CountDownLatch(5);
-		System.out.println("----Program Starts----");
 		try{
 			Gson gson = new Gson();
 			JsonReader reader = new JsonReader(new FileReader(args[0]));

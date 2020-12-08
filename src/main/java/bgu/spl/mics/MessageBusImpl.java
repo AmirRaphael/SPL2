@@ -12,13 +12,13 @@ import java.util.concurrent.Semaphore;
  */
 public class MessageBusImpl implements MessageBus {
 
-	private Map<MicroService, LinkedBlockingQueue<Message>> messageQueues;
-	private Map<Class<? extends Event<?>>, Queue<MicroService>> eventMap;
-	private Map<Class<? extends Broadcast>, Set<MicroService>> broadMap;
-	private Map<Event<?>, Future> futureMap;
+	private final Map<MicroService, LinkedBlockingQueue<Message>> messageQueues;
+	private final Map<Class<? extends Event<?>>, Queue<MicroService>> eventMap;
+	private final Map<Class<? extends Broadcast>, Set<MicroService>> broadMap;
+	private final Map<Event<?>, Future> futureMap;
 
 	private final Object roundRobinLock = new Object();
-	private static final int MAX_PERMITS = 100;	// todo: add explanation
+	private static final int MAX_PERMITS = 100;	// for the Star-Wars program - only 5 permits are needed
 	private final Semaphore semaphore = new Semaphore(MAX_PERMITS, true);
 
 	private static class SingletonHolder{
@@ -48,7 +48,7 @@ public class MessageBusImpl implements MessageBus {
 			throw new IllegalStateException("MicroService " + m.getName() + " is not registered!");
 		}
 
-		synchronized (this) {
+		synchronized (eventMap) { // Avoids duplicate put() method call for the same "type"
 			if (!this.eventMap.containsKey(type)) {
 				this.eventMap.put(type, new LinkedBlockingQueue<MicroService>());
 			}
@@ -71,7 +71,7 @@ public class MessageBusImpl implements MessageBus {
 			throw new IllegalStateException("MicroService " + m.getName() + " is not registered!");
 		}
 
-		synchronized (this) {
+		synchronized (broadMap) { // Avoids duplicate put() method call for the same "type"
 			if (!this.broadMap.containsKey(type)) {
 				this.broadMap.put(type, ConcurrentHashMap.newKeySet());
 			}
@@ -114,7 +114,7 @@ public class MessageBusImpl implements MessageBus {
 			ex.printStackTrace();
 		}
 
-		synchronized (roundRobinLock){
+		synchronized (roundRobinLock){ // Ensures correct execution of RoundRobin
 			Queue<MicroService> eventQueue = eventMap.get(e.getClass());
 			if (eventQueue != null){
 				MicroService receiver = eventQueue.poll();
@@ -135,18 +135,20 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		this.messageQueues.put(m, new LinkedBlockingQueue<>());
-		System.out.println(m.getName() + " registered!");
 	}
 
 	@Override
 	public void unregister(MicroService m) {
 		try {
+			// since this method preforms modifications in all of MessageBus data-structures,
+			// unregister should only execute if no other microServices are currently active (sending/subscribing)
 			semaphore.acquire(MAX_PERMITS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+
 		this.messageQueues.remove(m);
-		Thread.activeCount();
+
 		for (Class<? extends Event> event : eventMap.keySet()){
 			Queue<MicroService> queue = eventMap.get(event);
 			queue.remove(m);

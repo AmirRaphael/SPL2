@@ -6,7 +6,6 @@ import bgu.spl.mics.application.messages.BombDestroyerEvent;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Diary;
 
-import java.util.concurrent.CountDownLatch;
 
 /**
  * LandoMicroservice
@@ -23,7 +22,6 @@ public class LandoMicroservice  extends MicroService {
     @Override
     protected void initialize() {
        subscribeEvent(BombDestroyerEvent.class, (BombDestroyerEvent event) -> {
-           System.out.println("Lando bombing the Death Star!");
            try {
                Thread.sleep(event.getDuration());
            } catch (InterruptedException e) {

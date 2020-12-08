@@ -1,11 +1,10 @@
 package bgu.spl.mics.application.services;
+
 import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.DeactivationEvent;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Diary;
-
-import java.util.concurrent.CountDownLatch;
 
 /**
  * R2D2Microservices is in charge of the handling {@link DeactivationEvent}.
@@ -25,7 +24,6 @@ public class R2D2Microservice extends MicroService {
     @Override
     protected void initialize() {
         subscribeEvent(DeactivationEvent.class, (DeactivationEvent event) -> {
-            System.out.println("R2D2 deactivating shield!");
             try {
                 Thread.sleep(event.getDuration());
             } catch (InterruptedException e) {

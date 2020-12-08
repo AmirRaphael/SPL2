@@ -1,14 +1,11 @@
 package bgu.spl.mics.application.services;
-import bgu.spl.mics.Event;
+
 import bgu.spl.mics.Future;
 import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.Attack;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.Diary;
 
@@ -39,7 +36,6 @@ public class LeiaMicroservice extends MicroService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println("----Battle Starts----");
             List<Future<Boolean>> attackFutures = new ArrayList<>(attacks.length);
             for(Attack attack : attacks){
                 Future<Boolean> future = sendEvent(new AttackEvent(attack));
@@ -52,7 +48,6 @@ public class LeiaMicroservice extends MicroService {
             deactivate.get();// get is blocking until future is resolved.
             Future<Boolean> bomb = sendEvent(new BombDestroyerEvent(bombDuration));
             bomb.get();// get is blocking until future is resolved.
-            System.out.println("Leia sending Termination broadcast!");
             sendBroadcast(new TerminateBroadcast());
         });
         subscribeBroadcast(TerminateBroadcast.class,(TerminateBroadcast b)->{

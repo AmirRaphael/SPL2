@@ -7,8 +7,8 @@ import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Attack;
 import bgu.spl.mics.application.passiveObjects.Diary;
 import bgu.spl.mics.application.passiveObjects.Ewoks;
+import java.util.Collections;
 
-import java.util.concurrent.CountDownLatch;
 
 /**
  * C3POMicroservices is in charge of the handling {@link AttackEvent}.
@@ -30,9 +30,8 @@ public class C3POMicroservice extends MicroService {
     protected void initialize() {
         subscribeEvent(AttackEvent.class, (AttackEvent event) -> {
             Attack attack = event.getAttack();
-            System.out.println(getName() + " acquiring ewkos!");
+            Collections.sort(attack.getSerials()); // Used to avoid deadlock when acquiring Ewoks.
             ewoks.acquireEwoks(attack.getSerials());
-            System.out.println(getName() + " attacking!");
             try {
                 Thread.sleep(attack.getDuration());
             } catch (InterruptedException ignored){}

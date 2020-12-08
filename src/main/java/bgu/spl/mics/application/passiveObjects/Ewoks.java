@@ -1,6 +1,5 @@
 package bgu.spl.mics.application.passiveObjects;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +27,7 @@ public class Ewoks {
 
     public void acquireEwoks(List<Integer> serials) {
         synchronized (LOCK) {
+            // Note that the "serials" list is sorted
             for (int serialNum : serials) {
                 while (!ewoks.get(serialNum-1).isAvailable()) {
                     try {
