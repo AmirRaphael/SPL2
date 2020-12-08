@@ -13,6 +13,11 @@ public interface MessageBus {
 
     /**
      * Subscribes {@code m} to receive {@link Event}s of type {@code type}.
+     * @PRE:
+     *     messageQueues.contains(m)
+     *     !messageMap.contains(type) || !messageMap.get(type).contains(m)
+     * @POST:
+     *      messageMap.get(type).contains(m)
      * <p>
      * @param <T>  The type of the result expected by the completed event.
      * @param type The type to subscribe to,
@@ -22,6 +27,11 @@ public interface MessageBus {
 
     /**
      * Subscribes {@code m} to receive {@link Broadcast}s of type {@code type}.
+     * @PRE:
+     *     messageQueues.contains(m)
+     *     !messageMap.contains(type) || !messageMap.get(type).contains(m)
+     * @POST:
+     *      messageMap.get(type).contains(m)
      * <p>
      * @param type 	The type to subscribe to.
      * @param m    	The subscribing micro-service.
@@ -43,13 +53,21 @@ public interface MessageBus {
     /**
      * Adds the {@link Broadcast} {@code b} to the message queues of all the
      * micro-services subscribed to {@code b.getClass()}.
+     * @PRE:
+     *      messageMap.contains(b);
+     * @POST:
+     *      for(Microservice m  : messageMap.get(b)){
+     *          messageQueues.get(m).contains(b);
+     *      }
      * <p>
      * @param b 	The message to added to the queues.
      */
     void sendBroadcast(Broadcast b);
 
     /**
-     * Adds the {@link Event} {@code e} to the message queue of one of the
+     * Adds the {@link Event}
+     *
+     * {@code e} to the message queue of one of the
      * micro-services subscribed to {@code e.getClass()} in a round-robin
      * fashion. This method should be non-blocking.
      * <p>
@@ -62,6 +80,10 @@ public interface MessageBus {
 
     /**
      * Allocates a message-queue for the {@link MicroService} {@code m}.
+     * @PRE:
+     *      !messageQueues.contains(m)
+     * @POST:
+     *       messageQueues.contains(m)
      * <p>
      * @param m the micro-service to create a queue for.
      */
@@ -72,6 +94,11 @@ public interface MessageBus {
      * {@link #register(bgu.spl.mics.MicroService)} and cleans all references
      * related to {@code m} in this message-bus. If {@code m} was not
      * registered, nothing should happen.
+     * @POST:
+     *      !messageQueues.contains(m)
+     *      for(set<microService> microServiceSet : messageMap){
+     *          !microServiceSet.contains(m)
+     *      }
      * <p>
      * @param m the micro-service to unregister.
      */
@@ -85,12 +112,15 @@ public interface MessageBus {
      * should wait until a message becomes available.
      * The method should throw the {@link IllegalStateException} in the case
      * where {@code m} was never registered.
+     * @PRE:
+     *      messageQueues.contains(m)
+     * @POST:
      * <p>
      * @param m The micro-service requesting to take a message from its message
      *          queue.
-     * @return The next message in the {@code m}'s queue (blocking).
+     * @return The next message in the {@code m}'s queue(blocking).
      * @throws InterruptedException if interrupted while waiting for a message
-     *                              to became available.
+     * to became available.
      */
     Message awaitMessage(MicroService m) throws InterruptedException;
     
