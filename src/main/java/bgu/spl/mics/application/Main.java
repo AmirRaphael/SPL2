@@ -14,10 +14,12 @@ import java.util.concurrent.CountDownLatch;
  * In the end, you should output a JSON.
  */
 public class Main {
-	public static CountDownLatch initializeDoneSignal = new CountDownLatch(4);
-	public static CountDownLatch terminationDoneSignal = new CountDownLatch(5);
+	public static CountDownLatch initializeDoneSignal;
+	public static CountDownLatch terminationDoneSignal;
 
 	public static void main(String[] args) {
+		initializeDoneSignal = new CountDownLatch(4);
+		terminationDoneSignal = new CountDownLatch(5);
 		System.out.println("----Program Starts----");
 		try{
 			Gson gson = new Gson();
